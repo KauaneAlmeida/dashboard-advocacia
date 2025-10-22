@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,22 +8,45 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { LogOut, Moon, Sun } from "lucide-react";
+import { LogOut, Moon } from "lucide-react";
 
 const Settings = () => {
   const navigate = useNavigate();
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('darkMode');
-      if (saved !== null) return saved === 'true';
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('darkMode', 'true');
-      return true;
-    }
-    return true;
-  });
+  
+  // Estados para os campos do perfil
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [oab, setOab] = useState("");
+  
   const [notifications, setNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
+
+  // Carregar dados salvos ao montar o componente
+  useEffect(() => {
+    const savedProfile = localStorage.getItem("userProfile");
+    if (savedProfile) {
+      const profile = JSON.parse(savedProfile);
+      setName(profile.name || "");
+      setEmail(profile.email || "");
+      setPhone(profile.phone || "");
+      setOab(profile.oab || "");
+    }
+
+    const savedNotifications = localStorage.getItem("notifications");
+    if (savedNotifications) {
+      setNotifications(savedNotifications === "true");
+    }
+
+    const savedEmailNotifications = localStorage.getItem("emailNotifications");
+    if (savedEmailNotifications) {
+      setEmailNotifications(savedEmailNotifications === "true");
+    }
+
+    // Garantir que o dark mode está sempre ativo
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('darkMode', 'true');
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
@@ -32,6 +55,14 @@ const Settings = () => {
   };
 
   const handleSave = () => {
+    // Salvar dados do perfil
+    const profile = { name, email, phone, oab };
+    localStorage.setItem("userProfile", JSON.stringify(profile));
+    
+    // Salvar preferências de notificações
+    localStorage.setItem("notifications", notifications.toString());
+    localStorage.setItem("emailNotifications", emailNotifications.toString());
+    
     toast.success("Configurações salvas com sucesso!");
   };
 
@@ -55,19 +86,40 @@ const Settings = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome Completo</Label>
-                  <Input id="name" defaultValue="Dr. João Silva" />
+                  <Input 
+                    id="name" 
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Digite seu nome completo"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" defaultValue="joao@escritorio.com.br" />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="seu@email.com.br"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Telefone</Label>
-                  <Input id="phone" defaultValue="+55 (11) 98765-4321" />
+                  <Input 
+                    id="phone" 
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+55 (11) 98765-4321"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="oab">OAB</Label>
-                  <Input id="oab" defaultValue="SP 123456" />
+                  <Input 
+                    id="oab" 
+                    value={oab}
+                    onChange={(e) => setOab(e.target.value)}
+                    placeholder="SP 123456"
+                  />
                 </div>
               </div>
               <Button onClick={handleSave} className="gradient-accent text-white">
@@ -80,30 +132,18 @@ const Settings = () => {
           <Card>
             <CardHeader>
               <CardTitle>Aparência</CardTitle>
-              <CardDescription>Personalize a interface do sistema</CardDescription>
+              <CardDescription>Tema do sistema</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {darkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                  <Moon className="w-5 h-5" />
                   <div>
                     <p className="font-medium">Modo Escuro</p>
-                    <p className="text-sm text-muted-foreground">Alternar entre tema claro e escuro</p>
+                    <p className="text-sm text-muted-foreground">Tema escuro ativado permanentemente</p>
                   </div>
                 </div>
-                <Switch 
-                  checked={darkMode} 
-                  onCheckedChange={(checked) => {
-                    setDarkMode(checked);
-                    if (checked) {
-                      document.documentElement.classList.add('dark');
-                      localStorage.setItem('darkMode', 'true');
-                    } else {
-                      document.documentElement.classList.remove('dark');
-                      localStorage.setItem('darkMode', 'false');
-                    }
-                  }} 
-                />
+                <Switch checked={true} disabled />
               </div>
             </CardContent>
           </Card>
